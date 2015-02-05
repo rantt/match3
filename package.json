@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "del": "^1.1.1",
     "gulp": "^3.8.10",
     "gulp-jshint": "^1.9.2",
     "jshint-stylish": "^1.0.0",

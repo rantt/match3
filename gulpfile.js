@@ -1,8 +1,8 @@
 var gulp = require('gulp');
-var request = require('request');
-var fs = require('fs');
-
-var jshint = require('gulp-jshint');
+    request = require('request'),
+    fs = require('fs'),
+    del = require('del'),
+    jshint = require('gulp-jshint');
 
 
 gulp.task('init',['get-phaser', 'get-debug']);
@@ -17,10 +17,19 @@ gulp.task('get-debug', function() {
 });
 
 
-// gulp.task('copy', function(){
-//   gulp.src('index.js')
-//     .pipe(gulp.dest('dist'));
+gulp.task('clean', function(cb) {
+  del('dist/**', cb);
+});
+
+// gulp.task('copy', ['clean'], function(){
+//   gulp.src( [ 'src/js/*']).pipe(gulp.dest('./dist/js')); 
+//   gulp.src( [ 'src/assets/fonts/*']).pipe(gulp.dest('./dist/assets/fonts')); 
 // });
+
+gulp.task('copy', ['clean'], function(){
+  gulp.src(['js/**/*', 'assets/fonts/*', 'assets/images/*', 'assets/maps/*', 'assets/audio/*'], {cwd: './src', base: './src'})
+    .pipe(gulp.dest('./dist/'));
+});
 
 //Lint Task
 gulp.task('lint', function() {
