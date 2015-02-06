@@ -12,10 +12,13 @@ var gulp = require('gulp'),
     minifyCss = require('gulp-minify-css'),
     minifyHtml = require('gulp-minify-html'),
     rev = require('gulp-rev'),
+    rsync = require('gulp-rsync'),
     browserSync = require('browser-sync');
 
+var config = require('./rsync-config.json');
+
 // Start Server from src directory 
-gulp.task('browser-sync', function() {
+gulp.task('dev-server', function() {
     browserSync({
         server: {
             baseDir: "./src/"
@@ -23,9 +26,8 @@ gulp.task('browser-sync', function() {
     });
 });
 
-
 // Start Server from dist directory 
-gulp.task('test-dist', function() {
+gulp.task('dist-server', function() {
     browserSync({
         server: {
             baseDir: "./dist/"
@@ -79,22 +81,8 @@ gulp.task('imagemin', function () {
     .pipe(gulp.dest('dist/assets/images/'));
 });
 
-// gulp.task('build', ['copy', 'usemin']);
-
-// // Concatenate & Minify JS
-// gulp.task('scripts', function() {
-//   return gulp.src('./src/js/**/*.js')
-//     .pipe(concat('main.js'))
-//     .pipe(gulp.dest('dist'))
-//     .pipe(rename('main.min.js'))
-//     .pipe(uglify())
-//     .pipe(gulp.dest('dist'));
-// });
-
-
 //Lint Task
 gulp.task('lint', function() {
-  // return gulp.src(['gulpfile.js', 'src/js/**/*.js'])
   return gulp.src(['gulpfile.js', 'src/js/*.js'])
     .pipe(jshint())
     .pipe(jshint.reporter('jshint-stylish'));
@@ -105,6 +93,20 @@ gulp.task('watch', function() {
   gulp.watch(['src/js/*.js','src/index.html'], ['lint', browserSync.reload]);
 });
 
+// Deploy Source to server
+gulp.task('deploy', function() {
+  return gulp.src('dist')
+    .pipe(rsync({
+      root: 'dist',
+      username:  config.rsync.username,
+      hostname:  config.rsync.hostname,
+      destination:  config.rsync.destination,
+      recursive: true,
+      clean: true,
+      progress: true,
+      incremental: true
+    }));
+});
 
-gulp.task('default', ['browser-sync', 'watch']);
+gulp.task('default', ['dev-server', 'watch']);
 

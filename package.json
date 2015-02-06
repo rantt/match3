@@ -19,6 +19,7 @@
     "gulp-minify-html": "^0.1.8",
     "gulp-rename": "^1.2.0",
     "gulp-rev": "^3.0.0",
+    "gulp-rsync": "0.0.5",
     "gulp-uglify": "^1.1.0",
     "gulp-usemin": "^0.3.11",
     "imagemin-pngquant": "^4.0.0",

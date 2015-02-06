@@ -1,0 +1,7 @@
+{
+  "rsync": {
+    "username": "yourusername",
+    "hostname": "yourdomain",
+    "destination": "/path/on/server/"
+  }
+}
