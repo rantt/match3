@@ -23,6 +23,10 @@ Game.Play = function(game) {
 };
 
 Game.Play.prototype = {
+  preload: function() {
+    this.matchThree = new MatchThree(this.game);
+    this.matchThree.preload();
+  },
   create: function() {
     this.game.world.setBounds(0, 0 ,Game.w ,Game.h);
 
@@ -37,6 +41,11 @@ Game.Play.prototype = {
     sKey = this.game.input.keyboard.addKey(Phaser.Keyboard.S);
     dKey = this.game.input.keyboard.addKey(Phaser.Keyboard.D);
     // muteKey = game.input.keyboard.addKey(Phaser.Keyboard.M);
+    //
+
+    this.matchThree.create();
+    this.matchThree.initialBoard();
+    this.matchThree.drawBoard();
 
   },
 

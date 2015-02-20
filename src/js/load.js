@@ -13,7 +13,7 @@ Game.Boot = function(game) {
 Game.Boot.prototype = {
   preload: function() {
     // console.log('blah'+Game.w);
-		this.game.stage.backgroundColor = '#FFF';
+		this.game.stage.backgroundColor = '#000';
 		this.game.load.image('loading', 'assets/images/loading.png');
 		this.game.load.image('title', 'assets/images/title.png');
 		this.game.load.image('instructions', 'assets/images/instructions.png');
@@ -38,6 +38,9 @@ Game.Load.prototype = {
   	loadingText.anchor.setTo(0.5, 0.5);
   	var preloading = this.game.add.sprite(Game.w/2-64, Game.h/2+50, 'loading');
   	this.game.load.setPreloadSprite(preloading);
+
+
+
 
     // Music Track
     // this.game.load.audio('music','soundtrack.mp3');
