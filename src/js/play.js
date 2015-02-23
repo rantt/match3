@@ -45,7 +45,7 @@ Game.Play.prototype = {
 
     this.matchThree.create();
     this.matchThree.initialBoard();
-    this.matchThree.drawBoard();
+    // this.matchThree.drawBoard();
 
   },
 
