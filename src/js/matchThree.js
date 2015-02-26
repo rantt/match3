@@ -49,7 +49,7 @@ MatchThree.prototype = {
         output.push(gTile.spriteNum);
         this.idCount++;
       }
-      console.log(output);
+      // console.log(output);
       this.board.push(line);
     }
     this.removeMatches();
@@ -59,7 +59,10 @@ MatchThree.prototype = {
     for(var i = 0; i < 8;i++) {
       // var line = '';
       for(var j = 0; j < 8;j++) {
-        while ((this.horizontalMatch(i, j)) || (this.verticalMatch(i, j))) {
+        // while ((this.horizontalMatch(i, j)) || (this.verticalMatch(i, j))) {
+        // while (this.horizontalMatch(i, j))  {
+        var cTile = this.board[i][j];
+        while (this.horizontalMatch(cTile).length > 0)  {
           //Randomize color on match
           var num = this.game.rnd.between(0, 4);
           this.board[i][j].spriteNum = num;
@@ -70,19 +73,20 @@ MatchThree.prototype = {
       // console.log(line);
     }
   },
-  horizontalMatch: function(row, col) {
-    if(col === 0 || col === 7) {
-      return;
+  // horizontalMatch: function(row, col) {
+  horizontalMatch: function(cTile) {
+    var pos = this.getPosition(cTile);
+    if(pos.i === 0 || pos.i === 7) {
+      return [];
     }
 
-    var curTile = this.board[row][col];
-    var prevTile = this.board[row][col - 1];
-    var nextTile = this.board[row][col + 1];
+    var pTile = this.board[pos.i-1][pos.j];
+    var nTile = this.board[pos.i+1][pos.j];
 
-    if (curTile.spriteNum === prevTile.spriteNum && curTile.spriteNum === nextTile.spriteNum) {
-      return true;
+    if (cTile.spriteNum === pTile.spriteNum && cTile.spriteNum === nTile.spriteNum) {
+      return [pTile, cTile, nTile];
     }
-    return false;
+    return [];
   },
   verticalMatch: function(row, col) {
     if(row === 0 || row === 7) {
@@ -232,7 +236,7 @@ MatchThree.prototype = {
   },
   getPosition: function(tile) {
     for(var i = 0; i < 8;i++) {
-       console.log(this.board[i]);
+       console.log(this.board[i].spriteNum);
        for(var j = 0;j < 8;j++) {
          if (this.board[i][j]._id === tile._id) {
            return {i: i, j: j};
