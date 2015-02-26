@@ -62,7 +62,7 @@ MatchThree.prototype = {
         // while ((this.horizontalMatch(i, j)) || (this.verticalMatch(i, j))) {
         // while (this.horizontalMatch(i, j))  {
         var cTile = this.board[i][j];
-        while (this.horizontalMatch(cTile).length > 0)  {
+        while ((this.horizontalMatch(cTile).length > 0) || (this.verticalMatch(cTile).length > 0))  {
           //Randomize color on match
           var num = this.game.rnd.between(0, 4);
           this.board[i][j].spriteNum = num;
@@ -88,18 +88,19 @@ MatchThree.prototype = {
     }
     return [];
   },
-  verticalMatch: function(row, col) {
-    if(row === 0 || row === 7) {
-      return;
+  verticalMatch: function(cTile) {
+    var pos = this.getPosition(cTile);
+    if(pos.j === 0 || pos.j === 7) {
+      return [];
     }
-    var curTile = this.board[row][col];
-    var prevTile = this.board[row - 1][col];
-    var nextTile = this.board[row + 1][col];
 
-    if (curTile.spriteNum === prevTile.spriteNum && curTile.spriteNum === nextTile.spriteNum) {
-      return true;
+    var pTile = this.board[pos.i][pos.j - 1];
+    var nTile = this.board[pos.i][pos.j + 1];
+
+    if (cTile.spriteNum === pTile.spriteNum && cTile.spriteNum === nTile.spriteNum) {
+      return [pTile, cTile, nTile];
     }
-    return false;
+    return [];
   },
 
   score: function(tile, total, visited) {
@@ -235,13 +236,13 @@ MatchThree.prototype = {
     }
   },
   getPosition: function(tile) {
+    //Iterate through game board until the the tile is found
+    //return it's position in the 2d array
     for(var i = 0; i < 8;i++) {
-       console.log(this.board[i].spriteNum);
        for(var j = 0;j < 8;j++) {
          if (this.board[i][j]._id === tile._id) {
            return {i: i, j: j};
          }
-
        }
     }
     return {};  
