@@ -84,7 +84,7 @@ MatchThree.prototype = {
     var nTile = this.board[pos.i+1][pos.j];
 
     if (cTile.spriteNum === pTile.spriteNum && cTile.spriteNum === nTile.spriteNum) {
-      return [pTile, cTile, nTile];
+      return [pTile._id, cTile._id, nTile._id];
     }
     return [];
   },
@@ -98,59 +98,81 @@ MatchThree.prototype = {
     var nTile = this.board[pos.i][pos.j + 1];
 
     if (cTile.spriteNum === pTile.spriteNum && cTile.spriteNum === nTile.spriteNum) {
-      return [pTile, cTile, nTile];
+      return [pTile._id, cTile._id, nTile._id];
     }
     return [];
   },
-
-  score: function(tile, total, visited) {
-    // Visit all connected tiles of the same color return count of all matches 
-    var row = tile.row;
-    var col = tile.col;
-
-    // console.log('above = '+ this.board[row - 1][col].spriteNum + 'prev'+direction);
-    // console.log('below = '+ this.board[row + 1][col].spriteNum + 'prev'+direction);
-    console.log('vis'+visited);
-    console.log('tile._id'+tile._id);
-    // console.log('vistile'+visited.push(tile._id));
-
-    var above,below,left,right,finish = true;
-    if (visited.indexOf(tile._id) === -1) {
-      visited.push(tile._id);
-      console.log('vis'+visited);
-      if (row > 0 ) {
-        above = this.board[row - 1][col];
-        if (above.spriteNum === tile.spriteNum) {
-          finish = false;
-          this.score(above, total + 1, visited );
-        }
+  getMatches: function() {
+    var matches = [];
+    for(var i = 0; i < 8; i++) {
+      for(var j = 0; j < 8; j++) {
+        var cTile = this.board[i][j];
+        matches = _.union(matches, this.horizontalMatch(cTile),this.verticalMatch(cTile));
       }
-      if (row < 8) {
-        below = this.board[row + 1][col];
-        if (below.spriteNum === tile.spriteNum) {
-          finish = false;
-          this.score(below, total + 1, visited);
-        }
-      }
-     if (col > 0) {
-        left = this.board[row][col - 1];
-        if (left.spriteNum === tile.spriteNum) {
-          finish = false;
-          this.score(left, total + 1, visited);
-        }
-     } 
-     if (col < 8) {
-       right = this.board[row][col + 1];
-       if (right.spriteNum === tile.spriteNum) {
-         finish = false;
-         this.score(right, total + 1, visited);
-       }
-     }
     }
-
-    console.log('visited len'+visited.length);
-    return visited.length;
+    return matches;
   },
+  scoreMatches: function() {
+    var matches = this.getMatches();
+    for(var i = 0; i < 8; i++) {
+      for(var j = 0; j < 8; j++) {
+        var cTile = this.board[i][j];
+        if (matches.indexOf(cTile._id) > 0) {
+          cTile.kill();
+        }
+      }
+    }
+    return matches;
+
+  },
+  // score: function(tile, total, visited) {
+  //   // Visit all connected tiles of the same color return count of all matches 
+  //   var row = tile.row;
+  //   var col = tile.col;
+  //
+  //   // console.log('above = '+ this.board[row - 1][col].spriteNum + 'prev'+direction);
+  //   // console.log('below = '+ this.board[row + 1][col].spriteNum + 'prev'+direction);
+  //   console.log('vis'+visited);
+  //   console.log('tile._id'+tile._id);
+  //   // console.log('vistile'+visited.push(tile._id));
+  //
+  //   var above,below,left,right,finish = true;
+  //   if (visited.indexOf(tile._id) === -1) {
+  //     visited.push(tile._id);
+  //     console.log('vis'+visited);
+  //     if (row > 0 ) {
+  //       above = this.board[row - 1][col];
+  //       if (above.spriteNum === tile.spriteNum) {
+  //         finish = false;
+  //         this.score(above, total + 1, visited );
+  //       }
+  //     }
+  //     if (row < 8) {
+  //       below = this.board[row + 1][col];
+  //       if (below.spriteNum === tile.spriteNum) {
+  //         finish = false;
+  //         this.score(below, total + 1, visited);
+  //       }
+  //     }
+  //    if (col > 0) {
+  //       left = this.board[row][col - 1];
+  //       if (left.spriteNum === tile.spriteNum) {
+  //         finish = false;
+  //         this.score(left, total + 1, visited);
+  //       }
+  //    } 
+  //    if (col < 8) {
+  //      right = this.board[row][col + 1];
+  //      if (right.spriteNum === tile.spriteNum) {
+  //        finish = false;
+  //        this.score(right, total + 1, visited);
+  //      }
+  //    }
+  //   }
+  //
+  //   console.log('visited len'+visited.length);
+  //   return visited.length;
+  // },
   clickTile:  function(clickedTile) {
     if (this.selectedTile === null) {
       //Tile Clicked
@@ -167,17 +189,16 @@ MatchThree.prototype = {
       this.selectedTile.angle = 0;
       this.swapPositions(this.selectedTile, clickedTile); 
 
-      //check vertical or horizontal matches
-      var cScore = this.score(this.selectedTile, 0, []);
-      var sScore = this.score(clickedTile, 0, []);
-      if (cScore > 2) {
-        this.highScore += cScore;
-      }
-      if (sScore > 2) {
-        this.highScore += sScore;
-      }
+      //Swap them back if the swap doesn't result in a match
+      // console.log('match length'+this.getMatches().length);
+      // if (this.getMatches().length === 0) {
+      //   this.swapPositions(clickedTile, this.selectedTile); 
+      //   // this.swapPositions(this.selectedTile, clickedTile); 
+      // }
 
-      // this.highScore += cScore + sScore;
+      // var matches = this.getMatches();
+      // console.log('matches =' + matches);
+      this.scoreMatches();
 
       console.log('the score = '+ this.highScore);  
 
@@ -198,8 +219,8 @@ MatchThree.prototype = {
   },
   swapPositions: function(firstTile, secondTile) {
     
-    var f = this.game.add.tween(firstTile).to({x: secondTile.x, y: secondTile.y},600).start();
-    var s = this.game.add.tween(secondTile).to({x: firstTile.x, y: firstTile.y},600).start();
+    var f = this.game.add.tween(firstTile).to({x: secondTile.x, y: secondTile.y},300).start();
+    var s = this.game.add.tween(secondTile).to({x: firstTile.x, y: firstTile.y},300).start();
     var firstPos = this.getPosition(firstTile);
     var secondPos = this.getPosition(secondTile);
     console.log('position of firstTile = '+ firstPos.i + ' '+ firstPos.j );
@@ -212,21 +233,8 @@ MatchThree.prototype = {
 
     this.board[firstPos.i][firstPos.j] = secondTile;
     this.board[secondPos.i][secondPos.j] = firstTile;
-    // var tileTemp = firstTile; 
-    // var rowTemp  = firstTile.row;
-    // var colTemp  = firstTile.col;
-    //
-    // firstTile.row = secondTile.row;
-    // firstTile.col = secondTile.col;
-    //
-    // secondTile.row = rowTemp;
-    // secondTile.col = colTemp;
-    //
-    // this.board[firstTile.row][firstTile.col] = secondTile;
-    // this.board[secondTile.row][secondTile.col] = tempTile;
-    //
-    // //Update Board
-    // // console.log('sprite num ' + firstTile.spriteNum + ' ' + secondTile.spriteNum);
+
+    //Loop For Debugging Remove Later
     for(var i = 0;i < 8;i++) {
       line = "";
       for(var j = 0;j < 8;j++) {
