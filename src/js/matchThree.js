@@ -1,5 +1,7 @@
-var MatchThree = function(game) {
+var MatchThree = function(game, width, height) {
   this.game = game;
+  this.boardWidth = width;
+  this.boardHeight = height;
   this.board = [];
   this.selectedTile = null;
   this.idCount = 0;
@@ -23,15 +25,11 @@ MatchThree.prototype = {
 
     this.colors = [0xff0000, 0x0000ff, 0xffff00, 0x00ffff, 0x00ff00];
   },
-  update: function() {
-    // this.matchTiles.forEach(function(gTile) {
-    //
-    // },this);
-  },
   initialBoard: function() {
     this.board = [];
     for(var i = 0; i < 8;i++) {
       var line = [];
+      var output = [];
       for(var j = 0; j < 8;j++) {
         // line.push(this.game.rnd.between(0, 4));
         var num = this.game.rnd.between(0, 4);
@@ -43,10 +41,15 @@ MatchThree.prototype = {
         gTile.tint = this.colors[num];
         gTile.inputEnabled = true;
         gTile.events.onInputDown.add(this.clickTile, this);
-        gTile.reset(j*64+170, i*64+70);
+
+        //Draw the internal arrays vertically with the 0 index at the bottom
+        // gTile.reset(540-i*64,620-j*64);
+        gTile.reset(i*64+170, 540-j*64);
         line.push(gTile);
+        output.push(gTile.spriteNum);
         this.idCount++;
       }
+      console.log(output);
       this.board.push(line);
     }
     this.removeMatches();
@@ -142,8 +145,6 @@ MatchThree.prototype = {
 
     console.log('visited len'+visited.length);
     return visited.length;
-   
-
   },
   clickTile:  function(clickedTile) {
     if (this.selectedTile === null) {
