@@ -165,7 +165,11 @@ MatchThree.prototype = {
   },
   swapPositions: function(firstTile, secondTile) {
     // rewind = typeof rewind !== 'undefined' ? rewind : false;
-    
+
+    if (this.swapping) {return;}
+
+    this.swapping = true
+
     var f = this.game.add.tween(firstTile).to({x: secondTile.x, y: secondTile.y},300).start();
     var s = this.game.add.tween(secondTile).to({x: firstTile.x, y: firstTile.y},300).start();
     var firstPos = this.getPosition(firstTile);
@@ -182,6 +186,7 @@ MatchThree.prototype = {
     this.board[secondPos.i][secondPos.j] = firstTile;
     
     f.onComplete.add(function() {
+      this.swapping = false;
       if (this.rewind === false) {
         var score = this.scoreMatches(); 
         if (score === 0) {
@@ -247,17 +252,29 @@ MatchThree.prototype = {
     }
     return {};  
   },
+  // isAdjacent: function(firstTile, secondTile) {
+  //   console.log(secondTile.row + ' '+ firstTile.row);
+  //   if ((secondTile.row === (firstTile.row + 1) || secondTile.row === (firstTile.row - 1)) && (secondTile.col === firstTile.col)) {
+  //     //Tiles are Vertically Adjacent
+  //     return true;
+  //   }
+  //   else if ((secondTile.col === (firstTile.col + 1) || secondTile.col === (firstTile.col - 1)) && (secondTile.row === firstTile.row)) {
+  //     return true;
+  //   }
+  //
+  //   return false;
+  // },
   isAdjacent: function(firstTile, secondTile) {
     console.log(secondTile.row + ' '+ firstTile.row);
-    if ((secondTile.row === (firstTile.row + 1) || secondTile.row === (firstTile.row - 1)) && (secondTile.col === firstTile.col)) {
-      //Tiles are Vertically Adjacent
+    if (firstTile.x === secondTile.x && firstTile.y !== secondTile.y) {
       return true;
     }
-    else if ((secondTile.col === (firstTile.col + 1) || secondTile.col === (firstTile.col - 1)) && (secondTile.row === firstTile.row)) {
+    else if (firstTile.y === secondTile.y && firstTile.x !== secondTile.x) {
       return true;
     }
 
     return false;
   },
+
 
 };
