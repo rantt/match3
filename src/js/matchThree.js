@@ -6,6 +6,7 @@ var MatchThree = function(game, width, height) {
   this.selectedTile = null;
   this.idCount = 0;
   this.highScore = 0;
+  this.rewind = false;
 };
 
 MatchThree.prototype = {
@@ -73,7 +74,6 @@ MatchThree.prototype = {
       // console.log(line);
     }
   },
-  // horizontalMatch: function(row, col) {
   horizontalMatch: function(cTile) {
     var pos = this.getPosition(cTile);
     if(pos.i === 0 || pos.i === 7) {
@@ -107,72 +107,27 @@ MatchThree.prototype = {
     for(var i = 0; i < 8; i++) {
       for(var j = 0; j < 8; j++) {
         var cTile = this.board[i][j];
-        matches = _.union(matches, this.horizontalMatch(cTile),this.verticalMatch(cTile));
+        if (cTile.alive) {
+          matches = _.union(matches, this.horizontalMatch(cTile),this.verticalMatch(cTile));
+        }
       }
     }
     return matches;
   },
   scoreMatches: function() {
     var matches = this.getMatches();
+    console.log('matches'+matches);
     for(var i = 0; i < 8; i++) {
       for(var j = 0; j < 8; j++) {
         var cTile = this.board[i][j];
-        if (matches.indexOf(cTile._id) > 0) {
+        if (matches.indexOf(cTile._id) > -1) {
           cTile.kill();
         }
       }
     }
-    return matches;
+    return matches.length;
 
   },
-  // score: function(tile, total, visited) {
-  //   // Visit all connected tiles of the same color return count of all matches 
-  //   var row = tile.row;
-  //   var col = tile.col;
-  //
-  //   // console.log('above = '+ this.board[row - 1][col].spriteNum + 'prev'+direction);
-  //   // console.log('below = '+ this.board[row + 1][col].spriteNum + 'prev'+direction);
-  //   console.log('vis'+visited);
-  //   console.log('tile._id'+tile._id);
-  //   // console.log('vistile'+visited.push(tile._id));
-  //
-  //   var above,below,left,right,finish = true;
-  //   if (visited.indexOf(tile._id) === -1) {
-  //     visited.push(tile._id);
-  //     console.log('vis'+visited);
-  //     if (row > 0 ) {
-  //       above = this.board[row - 1][col];
-  //       if (above.spriteNum === tile.spriteNum) {
-  //         finish = false;
-  //         this.score(above, total + 1, visited );
-  //       }
-  //     }
-  //     if (row < 8) {
-  //       below = this.board[row + 1][col];
-  //       if (below.spriteNum === tile.spriteNum) {
-  //         finish = false;
-  //         this.score(below, total + 1, visited);
-  //       }
-  //     }
-  //    if (col > 0) {
-  //       left = this.board[row][col - 1];
-  //       if (left.spriteNum === tile.spriteNum) {
-  //         finish = false;
-  //         this.score(left, total + 1, visited);
-  //       }
-  //    } 
-  //    if (col < 8) {
-  //      right = this.board[row][col + 1];
-  //      if (right.spriteNum === tile.spriteNum) {
-  //        finish = false;
-  //        this.score(right, total + 1, visited);
-  //      }
-  //    }
-  //   }
-  //
-  //   console.log('visited len'+visited.length);
-  //   return visited.length;
-  // },
   clickTile:  function(clickedTile) {
     if (this.selectedTile === null) {
       //Tile Clicked
@@ -187,18 +142,9 @@ MatchThree.prototype = {
       //Swap Tile positions if they're adjacent
       this.game.tweens.remove(this.t);
       this.selectedTile.angle = 0;
-      this.swapPositions(this.selectedTile, clickedTile); 
 
-      //Swap them back if the swap doesn't result in a match
-      // console.log('match length'+this.getMatches().length);
-      // if (this.getMatches().length === 0) {
-      //   this.swapPositions(clickedTile, this.selectedTile); 
-      //   // this.swapPositions(this.selectedTile, clickedTile); 
-      // }
-
-      // var matches = this.getMatches();
-      // console.log('matches =' + matches);
-      this.scoreMatches();
+      this.scored = false;
+      this.swapPositions(this.selectedTile, clickedTile);
 
       console.log('the score = '+ this.highScore);  
 
@@ -218,6 +164,7 @@ MatchThree.prototype = {
 
   },
   swapPositions: function(firstTile, secondTile) {
+    // rewind = typeof rewind !== 'undefined' ? rewind : false;
     
     var f = this.game.add.tween(firstTile).to({x: secondTile.x, y: secondTile.y},300).start();
     var s = this.game.add.tween(secondTile).to({x: firstTile.x, y: firstTile.y},300).start();
@@ -233,6 +180,23 @@ MatchThree.prototype = {
 
     this.board[firstPos.i][firstPos.j] = secondTile;
     this.board[secondPos.i][secondPos.j] = firstTile;
+    
+    f.onComplete.add(function() {
+      if (this.rewind === false) {
+        var score = this.scoreMatches(); 
+        if (score === 0) {
+          //If no match is found reverse the last move
+          this.swapPositions(firstTile, secondTile); 
+          this.rewind = true;
+        }else {
+          this.highScore += score;
+          this.redrawBoard();
+        }
+        // this.scoreMatches();
+      }else {
+        this.rewind = false;
+      }
+    }, this); 
 
     //Loop For Debugging Remove Later
     for(var i = 0;i < 8;i++) {
@@ -243,6 +207,34 @@ MatchThree.prototype = {
       console.log(line);
     }
   },
+  redrawBoard: function() {
+    //Remove Dead Items from array
+    for(var i = 0; i < 8; i++) {
+      line = [];
+      var deadCounter = 0;
+      for(var j = 0; j < this.board[i].length;j++) {
+
+        var hpos = 540-j*64 + (deadCounter*64);
+
+        if (this.board[i][j].alive === true) {
+          if (this.board[i][j].y !== hpos) {
+
+            console.log('y'+this.board[i][j].y+ ' hpos'+hpos);
+
+            var t = this.game.add.tween(this.board[i][j]).to({y: hpos},300).start();
+            var temp = this.board[i][j];
+            this.board[i][j-deadCounter] = temp;
+          }
+        }else {
+          deadCounter += 1;
+        }
+      }
+       console.log(line);
+    }
+
+   },
+  removeDead: function() {
+  }, 
   getPosition: function(tile) {
     //Iterate through game board until the the tile is found
     //return it's position in the 2d array
