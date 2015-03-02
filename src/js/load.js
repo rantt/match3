@@ -1,6 +1,6 @@
 var Game = {
-  w: 800,
-  h: 600
+  w: 768,
+  h: 512 
 };
 
 // var w = 800;
@@ -14,9 +14,22 @@ Game.Boot.prototype = {
   preload: function() {
     // console.log('blah'+Game.w);
 		this.game.stage.backgroundColor = '#000';
+		// this.game.stage.backgroundColor = '#eee';
 		this.game.load.image('loading', 'assets/images/loading.png');
 		this.game.load.image('title', 'assets/images/title.png');
 		this.game.load.image('instructions', 'assets/images/instructions.png');
+
+    this.game.load.bitmapFont('minecraftia','assets/fonts/font.png','assets/fonts/font.xml');
+
+    //Automatically Scale to fit available screen
+    this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+    this.game.scale.maxHeight = window.innerHeight;
+    this.game.scale.maxWidth = window.innerHeight*(Game.w/Game.h);
+
+    this.game.stage.scale.pageAlignHorizontally = true;
+    this.game.stage.scale.pageAlignVeritcally = true;
+    this.game.scale.setScreenSize(true);
+
   },
   create: function() {
    this.game.state.start('Load');

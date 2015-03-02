@@ -15,7 +15,7 @@ var gulp = require('gulp'),
     rsync = require('gulp-rsync'),
     browserSync = require('browser-sync');
 
-var config = require('./rsync-config.json');
+var config = require('./config.json');
 
 // Start Server from src directory 
 gulp.task('dev-server', function() {

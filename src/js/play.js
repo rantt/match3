@@ -45,16 +45,18 @@ Game.Play.prototype = {
 
     this.matchThree.create();
     this.matchThree.initialBoard();
-    // this.matchThree.drawBoard();
 
+    this.scoreText = this.game.add.bitmapText(Game.w - 230 , 16, 'minecraftia','Score: '+this.matchThree.highScore, 32);
   },
 
   update: function() {
+    this.scoreText.setText('Score: ' + this.matchThree.highScore);
 
+    
     // // Toggle Music
     // muteKey.onDown.add(this.toggleMute, this);
-
   },
+  
   // toggleMute: function() {
   //   if (musicOn == true) {
   //     musicOn = false;

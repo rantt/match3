@@ -1,2 +1,4 @@
 node_modules
 *.swp
+rsync-config.json
+config.json

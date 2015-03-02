@@ -2,6 +2,10 @@ var MatchThree = function(game, width, height) {
   this.game = game;
   this.boardWidth = width;
   this.boardHeight = height;
+ 
+  this.boardWidth = 8;
+  this.boardHeight = 7;
+
   this.board = [];
   this.selectedTile = null;
   this.idCount = 0;
@@ -12,11 +16,14 @@ var MatchThree = function(game, width, height) {
 MatchThree.prototype = {
   preload: function() {
     // Draw a white Square
-    this.squarebmd = this.game.add.bitmapData(32, 32);
+    this.squarebmd = this.game.add.bitmapData(55, 55);
     this.squarebmd.ctx.strokeStyle = '#000';
-    this.squarebmd.ctx.rect(0, 0, 32, 32);
+    this.squarebmd.ctx.rect(0, 0, 55, 55);
     this.squarebmd.ctx.fillStyle = '#fff';
     this.squarebmd.ctx.fill();
+
+    this.game.load.audio('match', 'assets/audio/match3.wav');
+    this.game.load.audio('select', 'assets/audio/select.wav');
   },
   create: function() {
     this.matchTiles = this.game.add.group();
@@ -24,44 +31,42 @@ MatchThree.prototype = {
     this.matchTiles.setAll('anchor.x', 0.5);
     this.matchTiles.setAll('anchor.y', 0.5);
 
+    this.matchSnd = this.game.add.sound('match');
+    this.matchSnd.volume = 0.5;
+    this.selectSnd = this.game.add.sound('select');
+    this.selectSnd.volume = 0.5;
+
     this.colors = [0xff0000, 0x0000ff, 0xffff00, 0x00ffff, 0x00ff00];
+  },
+  addTile: function() {
+    var num = this.game.rnd.between(0, 4);
+    var gTile = this.matchTiles.getFirstDead();
+    gTile._id = this.idCount;
+    gTile.spriteNum = num;
+    gTile.tint = this.colors[num];
+    gTile.inputEnabled = true;
+    gTile.events.onInputDown.add(this.clickTile, this);
+    gTile.reset(0, 0);
+    this.idCount++;
+    return gTile;
   },
   initialBoard: function() {
     this.board = [];
-    for(var i = 0; i < 8;i++) {
-      var line = [];
-      var output = [];
-      for(var j = 0; j < 8;j++) {
-        // line.push(this.game.rnd.between(0, 4));
-        var num = this.game.rnd.between(0, 4);
-        var gTile = this.matchTiles.getFirstDead();
-        gTile.row = i;
-        gTile.col = j;
-        gTile._id = this.idCount;
-        gTile.spriteNum = num;
-        gTile.tint = this.colors[num];
-        gTile.inputEnabled = true;
-        gTile.events.onInputDown.add(this.clickTile, this);
-
-        //Draw the internal arrays vertically with the 0 index at the bottom
-        // gTile.reset(540-i*64,620-j*64);
-        gTile.reset(i*64+170, 540-j*64);
-        line.push(gTile);
-        output.push(gTile.spriteNum);
-        this.idCount++;
+    for(var i = 0; i < this.boardWidth;i++) {
+      var column = [];
+      for(var j = 0; j < this.boardHeight;j++) {
+        var gTile = this.addTile();
+        column.push(gTile);
       }
-      // console.log(output);
-      this.board.push(line);
+      this.board.push(column);
     }
     this.removeMatches();
+    this.drawBoard();
     return this.board;
   },
   removeMatches: function() {
-    for(var i = 0; i < 8;i++) {
-      // var line = '';
-      for(var j = 0; j < 8;j++) {
-        // while ((this.horizontalMatch(i, j)) || (this.verticalMatch(i, j))) {
-        // while (this.horizontalMatch(i, j))  {
+    for(var i = 0; i < this.boardWidth;i++) {
+      for(var j = 0; j < this.boardHeight;j++) {
         var cTile = this.board[i][j];
         while ((this.horizontalMatch(cTile).length > 0) || (this.verticalMatch(cTile).length > 0))  {
           //Randomize color on match
@@ -69,14 +74,39 @@ MatchThree.prototype = {
           this.board[i][j].spriteNum = num;
           this.board[i][j].tint = this.colors[num];
         }
-        // line += this.board[i][j].spriteNum;
       }
-      // console.log(line);
     }
+  },
+  drawBoard: function() {
+    if (this.swapping) {return;}
+    this.swapping = true;
+
+    for(var i = 0; i < this.boardWidth;i++) {
+      for(var j = 0;j < this.boardHeight;j++) {
+        var xpos = i*64 + 170;  
+        var ypos = 460 - j*64;
+        var cTile = this.board[i][j];
+        if (cTile.x !== xpos || cTile.y !== ypos) {
+          var t = this.game.add.tween(cTile).to({x: xpos, y: ypos},300).start();
+        }
+      }
+    }
+    t.onComplete.add(function() {
+      this.swapping = false;
+      var score = this.scoreMatches();
+      if (score > 0) {
+        //Increment High Score and Check to make sure additions
+        //didn't cause more scoring matches
+        this.matchSnd.play();
+        this.highScore += score;
+        console.log(this.highScore);
+        this.drawBoard();
+      }
+    },this);
   },
   horizontalMatch: function(cTile) {
     var pos = this.getPosition(cTile);
-    if(pos.i === 0 || pos.i === 7) {
+    if(pos.i === 0 || pos.i === (this.boardWidth - 1)) {
       return [];
     }
 
@@ -90,7 +120,7 @@ MatchThree.prototype = {
   },
   verticalMatch: function(cTile) {
     var pos = this.getPosition(cTile);
-    if(pos.j === 0 || pos.j === 7) {
+    if(pos.j === 0 || pos.j === (this.boardHeight - 1)) {
       return [];
     }
 
@@ -104,36 +134,36 @@ MatchThree.prototype = {
   },
   getMatches: function() {
     var matches = [];
-    for(var i = 0; i < 8; i++) {
-      for(var j = 0; j < 8; j++) {
-        var cTile = this.board[i][j];
-        if (cTile.alive) {
-          matches = _.union(matches, this.horizontalMatch(cTile),this.verticalMatch(cTile));
-        }
+    this.matchTiles.forEach(function(cTile) {
+      if (cTile.alive) {
+        matches = _.union(matches, this.horizontalMatch(cTile),this.verticalMatch(cTile));
       }
-    }
+    },this);
     return matches;
+
   },
   scoreMatches: function() {
     var matches = this.getMatches();
-    console.log('matches'+matches);
-    for(var i = 0; i < 8; i++) {
-      for(var j = 0; j < 8; j++) {
+    for(var i = 0; i < this.boardWidth; i++) {
+      for(var j = 0; j < this.boardHeight; j++) {
         var cTile = this.board[i][j];
-        if (matches.indexOf(cTile._id) > -1) {
+        if (matches.indexOf(cTile._id) > -1  ) {
           cTile.kill();
+          this.board[i].splice(j,1);
+          this.board[i].push(this.addTile());
+          j--;
+        }else {
         }
       }
     }
     return matches.length;
-
   },
   clickTile:  function(clickedTile) {
     if (this.selectedTile === null) {
       //Tile Clicked
+      this.selectSnd.play();
       this.selectedTile = clickedTile; 
-      console.log('row = '+clickedTile.row + ' col:'+clickedTile.col);
-    }else if (clickedTile.row === this.selectedTile.row && clickedTile.col === this.selectedTile.col) {
+    }else if (clickedTile.y === this.selectedTile.y && clickedTile.x === this.selectedTile.x) {
       // Reset Tile if Clicked Again
       this.game.tweens.remove(this.t);
       clickedTile.angle = 0;
@@ -146,10 +176,7 @@ MatchThree.prototype = {
       this.scored = false;
       this.swapPositions(this.selectedTile, clickedTile);
 
-      console.log('the score = '+ this.highScore);  
-
       this.selectedTile = null;
-      console.log('is adjacent');
     }else {
       //If Tiles are not  adjacent deselect current tile
       this.game.tweens.remove(this.t);
@@ -157,124 +184,56 @@ MatchThree.prototype = {
       this.selectedTile = null;
     }
 
-
     if (this.selectedTile !== null) {
       this.t = this.game.add.tween(this.selectedTile).to({angle: this.selectedTile.angle + 180}, 600, Phaser.Easing.Linear.None).to({angle: this.selectedTile.angle}, 600, Phaser.Easing.Linear.None).start().loop(); 
     }
 
   },
   swapPositions: function(firstTile, secondTile) {
-    // rewind = typeof rewind !== 'undefined' ? rewind : false;
+      var firstPos = this.getPosition(firstTile);
+      var secondPos = this.getPosition(secondTile);
 
-    if (this.swapping) {return;}
+      this.board[firstPos.i][firstPos.j] = secondTile;
+      this.board[secondPos.i][secondPos.j] = firstTile;
 
-    this.swapping = true
+      // var score = this.scoreMatches();
+      var matchCount = this.getMatches().length;
 
-    var f = this.game.add.tween(firstTile).to({x: secondTile.x, y: secondTile.y},300).start();
-    var s = this.game.add.tween(secondTile).to({x: firstTile.x, y: firstTile.y},300).start();
-    var firstPos = this.getPosition(firstTile);
-    var secondPos = this.getPosition(secondTile);
-    console.log('position of firstTile = '+ firstPos.i + ' '+ firstPos.j );
-
-    firstTile.row = secondPos.i;
-    firstTile.col = secondPos.j;
-
-    secondTile.row = firstPos.i;
-    secondTile.col = firstPos.j ;
-
-    this.board[firstPos.i][firstPos.j] = secondTile;
-    this.board[secondPos.i][secondPos.j] = firstTile;
-    
-    f.onComplete.add(function() {
-      this.swapping = false;
-      if (this.rewind === false) {
-        var score = this.scoreMatches(); 
-        if (score === 0) {
-          //If no match is found reverse the last move
-          this.swapPositions(firstTile, secondTile); 
-          this.rewind = true;
-        }else {
-          this.highScore += score;
-          this.redrawBoard();
-        }
-        // this.scoreMatches();
-      }else {
-        this.rewind = false;
+      // If it scores
+      if (matchCount !== 0) {
+        this.drawBoard();
+      } else {
+        this.board[firstPos.i][firstPos.j] = firstTile;
+        this.board[secondPos.i][secondPos.j] = secondTile;
       }
-    }, this); 
 
-    //Loop For Debugging Remove Later
-    for(var i = 0;i < 8;i++) {
-      line = "";
-      for(var j = 0;j < 8;j++) {
-        line += this.board[i][j].spriteNum+' ';
-      }
-      console.log(line);
-    }
   },
-  redrawBoard: function() {
-    //Remove Dead Items from array
-    for(var i = 0; i < 8; i++) {
-      line = [];
-      var deadCounter = 0;
-      for(var j = 0; j < this.board[i].length;j++) {
-
-        var hpos = 540-j*64 + (deadCounter*64);
-
-        if (this.board[i][j].alive === true) {
-          if (this.board[i][j].y !== hpos) {
-
-            console.log('y'+this.board[i][j].y+ ' hpos'+hpos);
-
-            var t = this.game.add.tween(this.board[i][j]).to({y: hpos},300).start();
-            var temp = this.board[i][j];
-            this.board[i][j-deadCounter] = temp;
-          }
-        }else {
-          deadCounter += 1;
-        }
-      }
-       console.log(line);
-    }
-
-   },
-  removeDead: function() {
-  }, 
   getPosition: function(tile) {
     //Iterate through game board until the the tile is found
     //return it's position in the 2d array
-    for(var i = 0; i < 8;i++) {
-       for(var j = 0;j < 8;j++) {
-         if (this.board[i][j]._id === tile._id) {
-           return {i: i, j: j};
-         }
-       }
+
+    for(var i = 0;i < this.boardWidth;i++) {
+      var j = this.board[i].indexOf(tile);
+      if (j > -1) {
+        return {i: i, j: j};
+      }
     }
-    return {};  
+    return {};
   },
-  // isAdjacent: function(firstTile, secondTile) {
-  //   console.log(secondTile.row + ' '+ firstTile.row);
-  //   if ((secondTile.row === (firstTile.row + 1) || secondTile.row === (firstTile.row - 1)) && (secondTile.col === firstTile.col)) {
-  //     //Tiles are Vertically Adjacent
-  //     return true;
-  //   }
-  //   else if ((secondTile.col === (firstTile.col + 1) || secondTile.col === (firstTile.col - 1)) && (secondTile.row === firstTile.row)) {
-  //     return true;
-  //   }
-  //
-  //   return false;
-  // },
   isAdjacent: function(firstTile, secondTile) {
-    console.log(secondTile.row + ' '+ firstTile.row);
-    if (firstTile.x === secondTile.x && firstTile.y !== secondTile.y) {
+    var firstPos = this.getPosition(firstTile);
+    var secondPos = this.getPosition(secondTile);
+
+    if (
+        (secondPos.i === firstPos.i) && 
+        ((secondPos.j === (firstPos.j - 1)) || (secondPos.j === (firstPos.j + 1)))) {
       return true;
-    }
-    else if (firstTile.y === secondTile.y && firstTile.x !== secondTile.x) {
+    }else if ((secondPos.j === firstPos.j) && 
+        ((secondPos.i === (firstPos.i - 1)) || (secondPos.i === (firstPos.i + 1)))) {
       return true;
+    }else {
+      return false;
     }
 
-    return false;
   },
-
-
 };
