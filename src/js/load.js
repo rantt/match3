@@ -1,6 +1,6 @@
 var Game = {
-  w: 768,
-  h: 512 
+  w: 600,
+  h: 600 
 };
 
 // var w = 800;
@@ -9,6 +9,10 @@ var Game = {
 Game.Boot = function(game) {
   this.game = game;
 };
+
+if (localStorage.getItem('highestScore') === null) {
+  localStorage.setItem('highestScore', 0);
+}
 
 Game.Boot.prototype = {
   preload: function() {
@@ -30,6 +34,9 @@ Game.Boot.prototype = {
     this.game.stage.scale.pageAlignVeritcally = true;
     this.game.scale.setScreenSize(true);
 
+
+    this.game.load.image('twitter','assets/images/twitter.png');
+    this.game.load.image('clickHere','assets/images/clickHere.png');
   },
   create: function() {
    this.game.state.start('Load');

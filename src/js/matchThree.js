@@ -1,16 +1,20 @@
-var MatchThree = function(game, width, height) {
+var MatchThree = function(game) {
   this.game = game;
-  this.boardWidth = width;
-  this.boardHeight = height;
- 
+
   this.boardWidth = 8;
   this.boardHeight = 7;
+
+  this.moveCount = 0;
+  this.moveLimit = 20;
+
+  this.chainCount = 1;
 
   this.board = [];
   this.selectedTile = null;
   this.idCount = 0;
   this.highScore = 0;
   this.rewind = false;
+
 };
 
 MatchThree.prototype = {
@@ -37,6 +41,16 @@ MatchThree.prototype = {
     this.selectSnd.volume = 0.5;
 
     this.colors = [0xff0000, 0x0000ff, 0xffff00, 0x00ffff, 0x00ff00];
+
+    this.bonusText = this.game.add.bitmapText(Game.w/2, Game.h/2, 'minecraftia','', 48);
+    this.bonusText.align = 'center';
+
+    this.chainText = this.game.add.bitmapText(Game.w/2, Game.h/2, 'minecraftia','', 48);
+    this.chainText.fontWeight = 'bold';
+    this.chainText.align = 'center';
+    this.chainText.tint = 0xff0000;
+    // this.bonusText.anchor.x = 0.5;
+    // this.bonusText.anchor.y = 0.5;
   },
   addTile: function() {
     var num = this.game.rnd.between(0, 4);
@@ -46,7 +60,7 @@ MatchThree.prototype = {
     gTile.tint = this.colors[num];
     gTile.inputEnabled = true;
     gTile.events.onInputDown.add(this.clickTile, this);
-    gTile.reset(0, 0);
+    gTile.reset(this.game.world.centerX, -this.game.world.centerY);
     this.idCount++;
     return gTile;
   },
@@ -83,8 +97,8 @@ MatchThree.prototype = {
 
     for(var i = 0; i < this.boardWidth;i++) {
       for(var j = 0;j < this.boardHeight;j++) {
-        var xpos = i*64 + 170;  
-        var ypos = 460 - j*64;
+        var xpos = i*64 + 80;  
+        var ypos = 500 - j*64;
         var cTile = this.board[i][j];
         if (cTile.x !== xpos || cTile.y !== ypos) {
           var t = this.game.add.tween(cTile).to({x: xpos, y: ypos},300).start();
@@ -97,10 +111,24 @@ MatchThree.prototype = {
       if (score > 0) {
         //Increment High Score and Check to make sure additions
         //didn't cause more scoring matches
+
+        if (this.chainCount > 1) {
+          this.chainText.setText('Chain Bonus x '+this.chainCount);
+          this.chainText.updateText();
+          this.chainText.x = this.game.world.centerX - (this.chainText.textWidth * 0.5);
+          this.chainText.y = this.game.world.centerY - 300;
+          this.chainText.alpha = 1;
+
+          var m = this.game.add.tween(this.chainText).to({y: Game.w/2+300, alpha: 0 },1000).start();
+           
+        }
         this.matchSnd.play();
         this.highScore += score;
         console.log(this.highScore);
+        this.chainCount += 1;
         this.drawBoard();
+      }else {
+        this.chainCount = 1;
       }
     },this);
   },
@@ -144,6 +172,9 @@ MatchThree.prototype = {
   },
   scoreMatches: function() {
     var matches = this.getMatches();
+    var score = matches.length;
+
+    //Clear Matches
     for(var i = 0; i < this.boardWidth; i++) {
       for(var j = 0; j < this.boardHeight; j++) {
         var cTile = this.board[i][j];
@@ -156,7 +187,52 @@ MatchThree.prototype = {
         }
       }
     }
-    return matches.length;
+
+   // var pairs =  _.countBy(matches, function(n) {
+   //    return n;
+   //  });
+   //  console.log('match pairs'+ JSON.stringify(pairs));
+
+    // if (matches.length > 8) {
+    //   score = this.matchBonus('BIG MATCH BONUS',score, 6);
+    // }else if (matches.length > 3) {
+    //   score = this.matchBonus(score); 
+    // }
+
+    if (matches.length > 3) {
+      score = this.matchBonus(score);
+    }
+    
+    // else if (matches.length === 8) {
+    //   score = this.matchBonus('Match 8 Bonus',score, 4);
+    // }
+    // else if (matches.length >= 6 && matches.length < 8) {
+    //   score = this.matchBonus('Match 6 Bonus',score, 3);
+    // }
+    // else if (matches.length >= 4 && matches.length < 6) {
+    //   score = this.matchBonus('Match 4 Bonus',score, 2);
+    // }
+
+    if (this.chainCount > 0) {
+      score *= this.chainCount;
+    }
+
+    return score;
+  },
+  matchBonus: function(score) {
+      //Double points for match 4
+
+      var modifier = 2 * Math.round(score / 2);
+
+      this.bonusText.setText('Match '+score+' Bonus');
+      this.bonusText.updateText();
+      this.bonusText.x = this.game.world.centerX - (this.bonusText.textWidth * 0.5);
+      this.bonusText.y = this.game.world.centerY - 300;
+      this.bonusText.alpha = 1;
+
+      var m = this.game.add.tween(this.bonusText).to({y: Game.w/2+300, alpha: 0 },1500).start();
+      
+      return score * modifier;
   },
   clickTile:  function(clickedTile) {
     if (this.selectedTile === null) {
@@ -196,11 +272,11 @@ MatchThree.prototype = {
       this.board[firstPos.i][firstPos.j] = secondTile;
       this.board[secondPos.i][secondPos.j] = firstTile;
 
-      // var score = this.scoreMatches();
       var matchCount = this.getMatches().length;
 
       // If it scores
       if (matchCount !== 0) {
+        this.moveCount += 1;
         this.drawBoard();
       } else {
         this.board[firstPos.i][firstPos.j] = firstTile;
