@@ -36,7 +36,7 @@ Game.Boot.prototype = {
 
 
     this.game.load.image('twitter','assets/images/twitter.png');
-    this.game.load.image('clickHere','assets/images/clickHere.png');
+    this.game.load.image('clickHere','assets/images/clickhere.png');
   },
   create: function() {
    this.game.state.start('Load');

@@ -38,8 +38,8 @@ Game.Outro.prototype = {
       particle.tint = this.colors[this.game.rnd.between(0, 4)];
     });
 
-    leftEmitter.start(false, 4000, 15);
-    rightEmitter.start(false, 4000, 15);
+    leftEmitter.start(false, 4000, 10);
+    rightEmitter.start(false, 4000, 10);
 
 
     this.movesText = this.game.add.bitmapText(this.game.world.centerX , this.game.world.centerY-200, 'minecraftia','In Twenty Moves...', 32);
