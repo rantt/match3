@@ -57,7 +57,7 @@ Game.Play.prototype = {
     this.scoreText.setText('Score: ' + this.matchThree.highScore);
     this.moveText.setText(this.matchThree.moveCount+'/'+this.matchThree.moveLimit);
 
-    if (this.matchThree.moveCount === this.matchThree.moveLimit) {
+    if (this.matchThree.moveCount === (this.matchThree.moveLimit+1)) {
       Game.score = this.matchThree.highScore;
       if (this.matchThree.highScore > this.highestScore) {
         localStorage.setItem('highestScore', this.matchThree.highScore);
