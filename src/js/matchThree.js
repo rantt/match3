@@ -42,15 +42,12 @@ MatchThree.prototype = {
 
     this.colors = [0xff0000, 0x0000ff, 0xffff00, 0x00ffff, 0x00ff00];
 
-    this.bonusText = this.game.add.bitmapText(Game.w/2, Game.h/2, 'minecraftia','', 48);
+    this.bonusText = this.game.add.bitmapText(Game.w/2, Game.h/2, 'arcade','', 72);
     this.bonusText.align = 'center';
 
-    this.chainText = this.game.add.bitmapText(Game.w/2, Game.h/2, 'minecraftia','', 48);
-    this.chainText.fontWeight = 'bold';
+    this.chainText = this.game.add.bitmapText(Game.w/2, Game.h/2, 'arcade','', 64);
     this.chainText.align = 'center';
-    this.chainText.tint = 0xff0000;
-    // this.bonusText.anchor.x = 0.5;
-    // this.bonusText.anchor.y = 0.5;
+    this.chainText.tint = 0x99ffff;
   },
   addTile: function() {
     var num = this.game.rnd.between(0, 4);
@@ -111,7 +108,6 @@ MatchThree.prototype = {
       if (score > 0) {
         //Increment High Score and Check to make sure additions
         //didn't cause more scoring matches
-
         if (this.chainCount > 1) {
           this.chainText.setText('Chain Bonus x '+this.chainCount);
           this.chainText.updateText();
@@ -119,16 +115,21 @@ MatchThree.prototype = {
           this.chainText.y = this.game.world.centerY - 300;
           this.chainText.alpha = 1;
 
-          var m = this.game.add.tween(this.chainText).to({y: Game.w/2+300, alpha: 0 },1000).start();
+          var m = this.game.add.tween(this.chainText).to({y: Game.w/2+300, alpha: 0 },2200).start();
            
         }
         this.matchSnd.play();
         this.highScore += score;
-        console.log(this.highScore);
         this.chainCount += 1;
+
         this.drawBoard();
       }else {
-        this.chainCount = 1;
+        this.chainCount = 1; //Reset Chain counter
+        if (this.highScore !== 0) {
+          //Add move count after Chains have stopped
+          //unless this is the first load
+          this.moveCount += 1;
+        }
       }
     },this);
   },
@@ -227,10 +228,10 @@ MatchThree.prototype = {
       this.bonusText.setText('Match '+score+' Bonus');
       this.bonusText.updateText();
       this.bonusText.x = this.game.world.centerX - (this.bonusText.textWidth * 0.5);
-      this.bonusText.y = this.game.world.centerY - 300;
+      this.bonusText.y = this.game.world.centerY - 400;
       this.bonusText.alpha = 1;
 
-      var m = this.game.add.tween(this.bonusText).to({y: Game.w/2+300, alpha: 0 },1500).start();
+      var m = this.game.add.tween(this.bonusText).to({y: Game.w/2+300, alpha: 0 },1800).start();
       
       return score * modifier;
   },
@@ -276,7 +277,6 @@ MatchThree.prototype = {
 
       // If it scores
       if (matchCount !== 0) {
-        this.moveCount += 1;
         this.drawBoard();
       } else {
         this.board[firstPos.i][firstPos.j] = firstTile;

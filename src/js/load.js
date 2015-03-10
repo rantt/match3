@@ -24,6 +24,7 @@ Game.Boot.prototype = {
 		this.game.load.image('instructions', 'assets/images/instructions.png');
 
     this.game.load.bitmapFont('minecraftia','assets/fonts/font.png','assets/fonts/font.xml');
+    this.game.load.bitmapFont('arcade','assets/fonts/arcade.png','assets/fonts/arcade.xml');
 
     //Automatically Scale to fit available screen
     this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
