@@ -231,7 +231,7 @@ MatchThree.prototype = {
       this.bonusText.y = this.game.world.centerY - 400;
       this.bonusText.alpha = 1;
 
-      var m = this.game.add.tween(this.bonusText).to({y: Game.w/2+300, alpha: 0 },1800).start();
+      var m = this.game.add.tween(this.bonusText).to({y: Game.w/2+300, alpha: 0 },2000).start();
       
       return score * modifier;
   },
