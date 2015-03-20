@@ -2,7 +2,7 @@
 
 ![screenshot](screenshots/screenshot.png)
 
-Basic Match 3 Game.
+Basic Match 3 Game, play it [here](http://divideby5.com/games/match3/).
 
 Higher matches get higher points, as does chaining your matches together.
 
